@@ -1,0 +1,53 @@
+.app {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  color: #1f2937;
+}
+
+h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.subtitle {
+  margin: 0.5rem 0 1.5rem;
+  color: #4b5563;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+select,
+input,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.7rem;
+  font: inherit;
+  color: inherit;
+  background: #ffffff;
+}
+
+textarea {
+  min-height: 180px;
+  resize: vertical;
+}
