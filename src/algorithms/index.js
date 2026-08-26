@@ -1,6 +1,6 @@
-import { caesarCipher } from './caesarCipher'
+import { cifradoCesar } from './caesarCipher'
 
-export const algorithms = [caesarCipher]
+export const algoritmos = [cifradoCesar]
 
-export const getAlgorithmById = (algorithmId) =>
-  algorithms.find((algorithm) => algorithm.id === algorithmId) ?? algorithms[0]
+export const obtenerAlgoritmoPorId = (idAlgoritmo) =>
+  algoritmos.find((algoritmo) => algoritmo.id === idAlgoritmo) ?? algoritmos[0]

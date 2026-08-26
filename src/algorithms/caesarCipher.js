@@ -1,42 +1,59 @@
-const normalizeShift = (value) => {
-  const numericValue = Number(value)
+const ALFABETO = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'
+const LONGITUD_MINIMA = 10
 
-  if (Number.isNaN(numericValue)) {
+const limpiarTexto = (texto) =>
+  texto
+    .toUpperCase()
+    .replace(/Ñ/g, '§')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/§/g, 'Ñ')
+    .split('')
+    .filter((caracter) => ALFABETO.includes(caracter))
+    .join('')
+
+const normalizarDesplazamiento = (valor) => {
+  const valorNumerico = Number(valor)
+
+  if (!Number.isFinite(valorNumerico)) {
     return 0
   }
 
-  const normalizedValue = numericValue % 26
-  return normalizedValue < 0 ? normalizedValue + 26 : normalizedValue
+  const valorNormalizado = valorNumerico % ALFABETO.length
+  return valorNormalizado < 0 ? valorNormalizado + ALFABETO.length : valorNormalizado
 }
 
-const shiftCharacter = (character, shift) => {
-  const code = character.charCodeAt(0)
-
-  if (code >= 65 && code <= 90) {
-    const shifted = ((code - 65 + shift) % 26) + 65
-    return String.fromCharCode(shifted)
-  }
-
-  if (code >= 97 && code <= 122) {
-    const shifted = ((code - 97 + shift) % 26) + 97
-    return String.fromCharCode(shifted)
-  }
-
-  return character
+const desplazarCaracter = (caracter, desplazamiento) => {
+  const posicion = ALFABETO.indexOf(caracter)
+  const posicionDesplazada = (posicion + desplazamiento) % ALFABETO.length
+  return ALFABETO[posicionDesplazada]
 }
 
-const transformText = (text, shift) => {
-  const normalizedShift = normalizeShift(shift)
+const transformarTexto = (texto, desplazamiento) => {
+  const textoLimpio = limpiarTexto(texto)
+  const desplazamientoNormalizado = normalizarDesplazamiento(desplazamiento)
 
-  return [...text].map((character) => shiftCharacter(character, normalizedShift)).join('')
+  return [...textoLimpio]
+    .map((caracter) => desplazarCaracter(caracter, desplazamientoNormalizado))
+    .join('')
 }
 
-export const caesarCipher = {
+const fuerzaBruta = (texto) =>
+  Array.from({ length: ALFABETO.length }, (_, clave) => ({
+    clave,
+    texto: transformarTexto(texto, -clave),
+  }))
+
+export const cifradoCesar = {
   id: 'caesar',
   name: 'César',
+  limpiar: limpiarTexto,
   options: {
     requiresShift: true,
+    alphabet: ALFABETO,
+    minLength: LONGITUD_MINIMA,
   },
-  encrypt: (text, shift) => transformText(text, shift),
-  decrypt: (text, shift) => transformText(text, -shift),
+  cifrar: (texto, desplazamiento) => transformarTexto(texto, desplazamiento),
+  descifrar: (texto, desplazamiento) => transformarTexto(texto, -desplazamiento),
+  fuerzaBruta,
 }
