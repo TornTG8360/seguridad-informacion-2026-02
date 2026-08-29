@@ -1,1 +1,25 @@
-export { ALFABETO, MINIMO_CARACTERES, limpiarTexto, indiceCoincidencia, detectarAlgoritmo, listaFrecuencias, ataqueCesar, ataqueAfin, ataqueVigenere } from './classicalAnalysis'
+export { 
+  ALFABETO, 
+  MINIMO_CARACTERES,
+  BIGRAMAS_ESPANOL,
+  TRIGRAMAS_ESPANOL,
+  limpiarTexto, 
+  indiceCoincidencia, 
+  detectarAlgoritmo, 
+  listaFrecuencias, 
+  ataqueCesar, 
+  ataqueAfin, 
+  ataqueVigenere,
+  cifrarCesar,
+  descifrarCesar,
+  cifrarAfin,
+  descifrarAfin,
+  cifrarVigenere,
+  descifrarVigenere,
+  analizarCesar,
+  analizarAfin,
+  analizarVigenere,
+  extraerNgramas,
+  puntuacionNgramas,
+  evaluarCalidadTexto
+} from './classicalAnalysis'
