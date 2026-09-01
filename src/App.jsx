@@ -416,7 +416,7 @@ function App() {
             <div className="sidebar-title">
               <h1>Cifrado Clásico</h1>
               <p className="sidebar-author">Daniel Sebastián Castro Figueredo</p>
-              <p className="sidebar-subject">Seguridad de la Información 2026</p>
+              <p className="sidebar-subject">Seguridad de la Información 2026-2</p>
             </div>
           )}
           <button
