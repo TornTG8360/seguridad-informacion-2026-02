@@ -320,7 +320,6 @@ function DecryptMode({ algoritmo, onAlgoritmoChange }) {
           <div className="info-row">
             <span className="label">Letra más frecuente:</span>
             <span className="value">{diagnostico.letraFrecuente}</span>
-            <span className="nota">{diagnostico.supposicion}</span>
           </div>
           <div className="info-row">
             <span className="label">Mejor pareja de parámetros:</span>
@@ -331,6 +330,31 @@ function DecryptMode({ algoritmo, onAlgoritmoChange }) {
             <span className="label">Método:</span>
             <span className="nota">Resolución de ecuación lineal - Se buscan parejas válidas (a, b)</span>
           </div>
+
+          {diagnostico.frecuencias && diagnostico.frecuencias.length > 0 && (
+            <div className="frecuencias-section">
+              <h5>Análisis de Frecuencia de Letras</h5>
+              <table className="frecuencias-table">
+                <thead>
+                  <tr>
+                    <th>Letra</th>
+                    <th>Frecuencia</th>
+                    <th>Porcentaje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {diagnostico.frecuencias.map((freq, idx) => (
+                    <tr key={idx} className={idx === 0 ? 'highlight-row' : ''}>
+                      <td className="letra-cell"><strong>{freq.letra}</strong></td>
+                      <td>{freq.cantidad}</td>
+                      <td>{freq.porcentaje}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="nota-frecuencias">Los datos se calculan sobre el texto descifrado. La letra destacada es la más frecuente.</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -388,11 +412,18 @@ function App() {
     <main className="app-shell">
       <div className={`sidebar ${sidebarAbierta ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
-          <h1>Cifrado Clásico</h1>
+          {sidebarAbierta && (
+            <div className="sidebar-title">
+              <h1>Cifrado Clásico</h1>
+              <p className="sidebar-author">Daniel Sebastián Castro Figueredo</p>
+              <p className="sidebar-subject">Seguridad de la Información 2026</p>
+            </div>
+          )}
           <button
             className="toggle-btn"
             onClick={() => setSidebarAbierta(!sidebarAbierta)}
             aria-label="Toggle sidebar"
+            title={sidebarAbierta ? 'Cerrar menú' : 'Abrir menú'}
           >
             ☰
           </button>
@@ -428,10 +459,6 @@ function App() {
                 </button>
               ))}
             </div>
-
-            <footer className="sidebar-footer">
-              <p>Seguridad de la Información 2026</p>
-            </footer>
           </nav>
         )}
       </div>

@@ -265,21 +265,32 @@ export const analizarCesar = (texto) => {
 
 export const analizarAfin = (texto) => {
   const ic = indiceCoincidencia(texto)
-  const frecuencias = listaFrecuencias(texto)
-  const letraFrecuente = frecuencias[0]?.letra || 'A'
   const resultado = ataqueAfin(texto)
   const mejorCandidato = resultado.candidatos[0]
-  const calidadTexto = evaluarCalidadTexto(mejorCandidato.texto)
+  const mejorTextoDescifrado = mejorCandidato.texto
+  
+  // Análisis de frecuencias del texto descifrado
+  const frecuenciasDescifrado = listaFrecuencias(mejorTextoDescifrado)
+  const letraFrecuente = frecuenciasDescifrado[0]?.letra || 'A'
+  
+  // Top 10 letras más frecuentes en el texto descifrado
+  const topFrecuencias = frecuenciasDescifrado.slice(0, 10).map(f => ({
+    letra: f.letra,
+    cantidad: f.cantidad,
+    porcentaje: f.porcentaje.toFixed(2)
+  }))
+  
+  const calidadTexto = evaluarCalidadTexto(mejorTextoDescifrado)
   
   return {
     ic: ic.toFixed(4),
     icEsperado: '≈ 0.077',
     letraFrecuente: letraFrecuente,
-    supposicion: 'Se asume que corresponde a E',
     mejorA: mejorCandidato.a,
     mejorB: mejorCandidato.b,
-    mejorTexto: mejorCandidato.texto,
+    mejorTexto: mejorTextoDescifrado,
     chiCuadrado: mejorCandidato.chi.toFixed(2),
+    frecuencias: topFrecuencias,
     ngramas: {
       bigramas: calidadTexto.bigramas.toFixed(1) + '%',
       trigramas: calidadTexto.trigramas.toFixed(1) + '%',
