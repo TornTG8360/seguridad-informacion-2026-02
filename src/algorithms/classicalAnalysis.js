@@ -1,5 +1,5 @@
 export const ALFABETO = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'
-export const MINIMO_CARACTERES = 100  // Reducido de 400 para permitir textos más cortos
+export const MINIMO_CARACTERES = 400  // Reducido de 400 para permitir textos más cortos
 
 export const FREQ_ESPANOL = {
   A: 12.53, B: 1.42, C: 4.68, D: 5.86, E: 13.68, F: 0.69, G: 1.01, H: 0.70,
@@ -8,20 +8,17 @@ export const FREQ_ESPANOL = {
   X: 0.22, Y: 0.90, Z: 0.52,
 }
 
-// Bigramas más comunes en español (pares de letras consecutivas)
 export const BIGRAMAS_ESPANOL = {
   'DE': 6.25, 'LA': 4.48, 'QU': 3.97, 'EL': 3.40, 'EN': 2.88, 'RE': 2.65, 'ER': 2.24,
   'LO': 2.20, 'AR': 1.99, 'ES': 1.94, 'LE': 1.87, 'TA': 1.79, 'TE': 1.78, 'OR': 1.68,
   'NT': 1.60, 'DO': 1.55, 'RA': 1.54, 'TO': 1.53, 'ÓN': 1.52, 'ON': 1.49,
 }
 
-// Trigramas más comunes en español
 export const TRIGRAMAS_ESPANOL = {
   'QUE': 3.68, 'DEL': 1.55, 'LAS': 1.42, 'EST': 1.38, 'LOS': 1.35, 'POR': 1.18, 'UNA': 1.13,
   'ARD': 1.10, 'OND': 1.07, 'NTE': 0.95, 'TAR': 0.88, 'MON': 0.82, 'ENT': 0.81, 'UES': 0.79,
 }
 
-// Función para extraer n-gramas de un texto
 export const extraerNgramas = (texto, n = 2) => {
   const ngramas = {}
   for (let i = 0; i <= texto.length - n; i++) {
@@ -31,7 +28,6 @@ export const extraerNgramas = (texto, n = 2) => {
   return ngramas
 }
 
-// Función para calcular puntuación de n-gramas (cuántos patrones coinciden con español esperado)
 export const puntuacionNgramas = (texto, ngramario = BIGRAMAS_ESPANOL) => {
   const ngramas = extraerNgramas(texto, Object.keys(ngramario)[0]?.length || 2)
   const totalNgramas = Math.max(1, texto.length - (Object.keys(ngramario)[0]?.length || 2) + 1)
@@ -43,7 +39,6 @@ export const puntuacionNgramas = (texto, ngramario = BIGRAMAS_ESPANOL) => {
   return totalNgramas > 0 ? (ngramasValidos / totalNgramas) * 100 : 0
 }
 
-// Función para evaluar calidad de texto basado en n-gramas
 export const evaluarCalidadTexto = (texto) => {
   const puntuacionBigramas = puntuacionNgramas(texto, BIGRAMAS_ESPANOL)
   const puntuacionTrigramas = puntuacionNgramas(texto, TRIGRAMAS_ESPANOL)
@@ -106,15 +101,6 @@ export const detectarAlgoritmo = (texto) => {
     }
   }
 
-  // --- Distinción César vs Afín ---
-  // Clave: comparar los MEJORES DESCIFRADOS de cada ataque, no el texto
-  // cifrado (sus frecuencias son casi planas por diseño en ambos casos).
-  // César es un caso particular de Afín con a=1, así que:
-  //  1. Se corre el ataque Afín completo (todos los a válidos × todos los b).
-  //  2. Si el mejor (a,b) tiene a=1 → es un César disfrazado.
-  //  3. Si a≠1, solo se concluye Afín si la mejora en χ² y/o n-gramas frente
-  //     al mejor César puro es sustancial (evita sobreajustar con más
-  //     parámetros cuando César ya explica el texto igual de bien).
   const candidatosCesar = ataqueCesar(texto)
   const mejorCesar = candidatosCesar[0]
 
@@ -128,7 +114,6 @@ export const detectarAlgoritmo = (texto) => {
     `César: a=1, b=${mejorCesar.clave} (χ²=${mejorCesar.chi.toFixed(2)}, n-gramas=${calidadCesar.promedio.toFixed(1)}%) · ` +
     `Afín: a=${mejorAfin.a}, b=${mejorAfin.b} (χ²=${mejorAfin.chi.toFixed(2)}, n-gramas=${calidadAfin.promedio.toFixed(1)}%)`
 
-  // Caso 1: el mejor ajuste lineal ya es a=1 → es César
   if (mejorAfin.a === 1) {
     return {
       id: 'cesar',
@@ -138,12 +123,11 @@ export const detectarAlgoritmo = (texto) => {
     }
   }
 
-  // Caso 2: comparar mejora relativa de χ² y n-gramas (Afín con a≠1 vs César)
   const mejoraChi = mejorCesar.chi > 0 ? (mejorCesar.chi - mejorAfin.chi) / mejorCesar.chi : 0
   const mejoraNgramas = calidadAfin.promedio - calidadCesar.promedio
 
-  const UMBRAL_MEJORA_CHI = 0.15   // Afín debe reducir χ² al menos un 15%
-  const UMBRAL_MEJORA_NGRAMAS = 2  // o superar en 2pp los n-gramas del César
+  const UMBRAL_MEJORA_CHI = 0.15
+  const UMBRAL_MEJORA_NGRAMAS = 2
 
   const esAfin = mejoraChi > UMBRAL_MEJORA_CHI || mejoraNgramas > UMBRAL_MEJORA_NGRAMAS
 
@@ -192,10 +176,6 @@ export const chiCuadrado = (texto) => {
 export const cifrarCesar = (texto, clave) => [...texto].map((letra) => desplazar(letra, clave)).join('')
 export const descifrarCesar = (texto, clave) => cifrarCesar(texto, -clave)
 
-// NUEVO: valida que el texto solo contenga letras del alfabeto.
-// Sin esto, un carácter fuera del alfabeto (espacio, tilde, minúscula, etc.)
-// devuelve indiceDe = -1, y TODOS esos caracteres colisionan en la misma
-// salida cifrada — corrupción silenciosa e irreversible, sin ningún error.
 const validarSoloAlfabeto = (texto) => {
   const invalido = [...texto].find((c) => !ALFABETO.includes(c))
   if (invalido !== undefined) {
@@ -235,8 +215,6 @@ export const descifrarVigenere = (texto, clave) => {
   }).join('')
 }
 
-// Funciones de diagnóstico para descifrado
-
 export const analizarCesar = (texto) => {
   const ic = indiceCoincidencia(texto)
   const candidatos = ataqueCesar(texto)
@@ -269,11 +247,9 @@ export const analizarAfin = (texto) => {
   const mejorCandidato = resultado.candidatos[0]
   const mejorTextoDescifrado = mejorCandidato.texto
   
-  // Análisis de frecuencias del texto descifrado
   const frecuenciasDescifrado = listaFrecuencias(mejorTextoDescifrado)
   const letraFrecuente = frecuenciasDescifrado[0]?.letra || 'A'
   
-  // Top 10 letras más frecuentes en el texto descifrado
   const topFrecuencias = frecuenciasDescifrado.slice(0, 10).map(f => ({
     letra: f.letra,
     cantidad: f.cantidad,
@@ -309,7 +285,6 @@ export const analizarAfin = (texto) => {
 export const analizarVigenere = (texto) => {
   const ic = indiceCoincidencia(texto)
   
-  // Límite superior para análisis de Kasiski con textos más cortos
   const maxLongitudClave = texto.length > 500 ? 12 : 8
   
   const mejorLongitud = Array.from({ length: maxLongitudClave }, (_, indice) => indice + 2)
@@ -320,7 +295,6 @@ export const analizarVigenere = (texto) => {
     })
     .sort((a, b) => b.ic - a.ic)[0]
   
-  // Ejecutar ataque Vigenère para obtener clave estimada
   const resultado = ataqueVigenere(texto)
   const calidadTexto = evaluarCalidadTexto(resultado.descifrado)
   
