@@ -20,6 +20,144 @@ const ALGORITMOS = [
   { id: 'vigenere', nombre: 'Vigenère', descripcion: 'Polialfabético' },
 ]
 
+async function loginUsuario(username, password) {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Error de autenticación')
+  }
+
+  return data
+}
+
+async function registrarUsuario(username, password) {
+  const response = await fetch('/api/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ username, password }),
+  })
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data.error || 'No se pudo crear el usuario')
+  }
+
+  return data
+}
+
+function LoginScreen({ onLogin, onRegister }) {
+  const [vista, setVista] = useState('login')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [cargando, setCargando] = useState(false)
+
+  const manejarSubmit = async (event) => {
+    event.preventDefault()
+    setError('')
+
+    if (!username.trim() || !password.trim()) {
+      setError(vista === 'login' ? 'Ingresa usuario y contraseña.' : 'Ingresa usuario y contraseña para registrarte.')
+      return
+    }
+
+    try {
+      setCargando(true)
+
+      if (vista === 'login') {
+        await onLogin(username.trim(), password)
+      } else {
+        const usuarioCreado = await onRegister(username.trim(), password)
+        if (usuarioCreado) {
+          setVista('login')
+          setUsername('')
+          setPassword('')
+        }
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCargando(false)
+    }
+  }
+
+  return (
+    <main className="login-shell">
+      <section className="login-card">
+        <div className="login-header">
+          <span className="login-badge">Seguridad Informática</span>
+          <h1>{vista === 'login' ? 'Acceso al sistema' : 'Crear cuenta'}</h1>
+          <p>
+            {vista === 'login'
+              ? 'Valida tus credenciales para acceder a la herramienta de cifrado y análisis.'
+              : 'Registra un nuevo usuario para probar el inicio de sesión con la base de datos.'}
+          </p>
+        </div>
+
+        <div className="auth-toggle" role="tablist" aria-label="Tipos de acceso">
+          <button
+            type="button"
+            className={`auth-tab ${vista === 'login' ? 'active' : ''}`}
+            onClick={() => setVista('login')}
+          >
+            Iniciar sesión
+          </button>
+          <button
+            type="button"
+            className={`auth-tab ${vista === 'register' ? 'active' : ''}`}
+            onClick={() => setVista('register')}
+          >
+            Registro
+          </button>
+        </div>
+
+        <form onSubmit={manejarSubmit} className="login-form">
+          <div className="control-group">
+            <label htmlFor="username">Usuario</label>
+            <input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="admin"
+              autoComplete="username"
+            />
+          </div>
+
+          <div className="control-group">
+            <label htmlFor="password">Contraseña</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder={vista === 'login' ? '••••••••' : 'Mínimo 8 caracteres'}
+              autoComplete={vista === 'login' ? 'current-password' : 'new-password'}
+            />
+          </div>
+
+          {error && <p className="login-error">{error}</p>}
+
+          <button type="submit" className="btn-primary" disabled={cargando}>
+            {cargando ? (vista === 'login' ? 'Validando...' : 'Creando usuario...') : (vista === 'login' ? 'Ingresar' : 'Crear usuario')}
+          </button>
+        </form>
+      </section>
+    </main>
+  )
+}
+
 function EncryptMode({ algoritmo, onAlgoritmoChange }) {
   const [textoOriginal, setTextoOriginal] = useState('')
   const [clave, setClave] = useState('')
@@ -170,12 +308,10 @@ function DecryptMode({ algoritmo, onAlgoritmoChange }) {
       return
     }
 
-    // Detectar algoritmo automáticamente
     const deteccion = detectarAlgoritmo(texto)
-    
-    // Si es insuficiente pero el usuario seleccionó auto, usar César como default
-    let algoritmoUsado = algoritmo === 'auto' 
-      ? (deteccion.id === 'insuficiente' ? 'cesar' : deteccion.id) 
+
+    let algoritmoUsado = algoritmo === 'auto'
+      ? (deteccion.id === 'insuficiente' ? 'cesar' : deteccion.id)
       : algoritmo
 
     setAlgoritmoDetectado(algoritmoUsado)
@@ -203,7 +339,7 @@ function DecryptMode({ algoritmo, onAlgoritmoChange }) {
           setClave(info.claveEstimada)
         }
       }
-      
+
       setDescifrado(resultado)
       setDiagnostico(info)
     } catch (error) {
@@ -404,9 +540,29 @@ function DecryptMode({ algoritmo, onAlgoritmoChange }) {
 }
 
 function App() {
+  const [usuario, setUsuario] = useState(null)
   const [sidebarAbierta, setSidebarAbierta] = useState(true)
   const [modo, setModo] = useState('cifrar')
   const [algoritmo, setAlgoritmo] = useState('cesar')
+
+  const manejarLogin = async (username, password) => {
+    const datosUsuario = await loginUsuario(username, password)
+    setUsuario(datosUsuario)
+  }
+
+  const manejarRegistro = async (username, password) => {
+    const datosUsuario = await registrarUsuario(username, password)
+    setUsuario(datosUsuario)
+    return datosUsuario
+  }
+
+  const manejarLogout = () => {
+    setUsuario(null)
+  }
+
+  if (!usuario) {
+    return <LoginScreen onLogin={manejarLogin} onRegister={manejarRegistro} />
+  }
 
   return (
     <main className="app-shell">
@@ -461,6 +617,28 @@ function App() {
             </div>
           </nav>
         )}
+
+        <div className="sidebar-footer">
+          {sidebarAbierta ? (
+            <div className="user-summary">
+              <p className="user-label">Conectado como</p>
+              <strong className="user-name">{usuario.username}</strong>
+              <p className="sidebar-role">Rol: {usuario.rol}</p>
+            </div>
+          ) : (
+            <span className="compact-user" title={`Usuario: ${usuario.username}`} aria-label={`Usuario: ${usuario.username}`}>
+              {usuario.username.charAt(0).toUpperCase()}
+            </span>
+          )}
+          <button
+            className="nav-btn logout-btn"
+            onClick={manejarLogout}
+            title={sidebarAbierta ? 'Cerrar sesión' : 'Salir'}
+            aria-label={sidebarAbierta ? 'Cerrar sesión' : 'Salir'}
+          >
+            {sidebarAbierta ? 'Cerrar sesión' : '↪'}
+          </button>
+        </div>
       </div>
 
       <section className="app-content">
