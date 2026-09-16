@@ -24,8 +24,6 @@ npm run build
 
 ## Backend de autenticación
 
-El módulo de autenticación quedó separado en la carpeta `backend/` siguiendo la especificación técnica del documento [autenticacion-backend.md](autenticacion-backend.md).
-
 Para iniciar el backend:
 
 ```bash
